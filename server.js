@@ -68,6 +68,55 @@ app.post("/api/query", async (req, res) => {
   }
 });
 
+// New endpoints for instructions page
+app.get("/api/instructors", async (req, res) => {
+  try {
+    console.log("[INFO] Fetching instructors list...");
+    const { rows: data } = await executeQuery(
+      "SELECT instructor_name FROM dim_instructor ORDER BY instructor_name"
+    );
+    res.json(data);
+  } catch (error) {
+    console.error("[ERROR] Failed to fetch instructors:", error);
+    res.status(500).json({
+      error: "Failed to fetch instructors",
+      details: error.message,
+    });
+  }
+});
+
+app.get("/api/domains", async (req, res) => {
+  try {
+    console.log("[INFO] Fetching domains list...");
+    const { rows: data } = await executeQuery(
+      "SELECT domain_name FROM dim_domain ORDER BY domain_name"
+    );
+    res.json(data);
+  } catch (error) {
+    console.error("[ERROR] Failed to fetch domains:", error);
+    res.status(500).json({
+      error: "Failed to fetch domains",
+      details: error.message,
+    });
+  }
+});
+
+app.get("/api/classes", async (req, res) => {
+  try {
+    console.log("[INFO] Fetching classes list...");
+    const { rows: data } = await executeQuery(
+      "SELECT class_name FROM dim_class ORDER BY class_name"
+    );
+    res.json(data);
+  } catch (error) {
+    console.error("[ERROR] Failed to fetch classes:", error);
+    res.status(500).json({
+      error: "Failed to fetch classes",
+      details: error.message,
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

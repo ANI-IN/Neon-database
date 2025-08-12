@@ -30,6 +30,98 @@
           transform: rotate(360deg);
         }
       }
+
+      /* Responsive logo styles */
+      .logo-img {
+        height: auto;
+        max-height: 40px;
+        width: auto;
+        max-width: 120px;
+      }
+
+      @media (max-width: 640px) {
+        .logo-img {
+          max-width: 80px;
+          max-height: 30px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .logo-img {
+          max-width: 60px;
+          max-height: 25px;
+        }
+      }
+
+      /* Button hover effects and styling */
+      .ask-ai-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.3);
+        transform: translateY(0);
+        transition: all 0.2s ease-in-out;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+
+      .ask-ai-btn:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        box-shadow: 0 6px 20px 0 rgba(59, 130, 246, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .ask-ai-btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px 0 rgba(59, 130, 246, 0.3);
+      }
+
+      .ask-ai-btn:disabled {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        box-shadow: none;
+        transform: translateY(0);
+        cursor: not-allowed;
+      }
+
+      /* Input field enhancements */
+      .query-input {
+        border: 2px solid #e5e7eb;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .query-input:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      /* Arrow and spinner animations */
+      .arrow-icon {
+        transition: transform 0.2s ease-in-out;
+        width: 20px;
+        height: 20px;
+      }
+
+      .ask-ai-btn:hover .arrow-icon {
+        transform: translateX(2px);
+      }
+
+      .spinner-icon {
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
@@ -39,12 +131,12 @@
         class="container mx-auto max-w-6xl px-4 py-3 flex justify-between items-center"
       >
         <div class="flex items-center justify-start">
-          <img src="logo.png" alt="Logo" width="120px" />
-          <h1 class="text-xl font-bold text-gray-900 hidden sm:block"></h1>
+          <img src="logo.png" alt="Logo" class="logo-img" />
+          <h1 class="text-xl font-bold text-gray-900 hidden sm:block ml-3"></h1>
         </div>
         <a
           href="/instructions.html"
-          class="text-blue-600 font-semibold hover:text-blue-800 transition"
+          class="text-blue-600 font-semibold hover:text-blue-800 transition text-sm sm:text-base"
           >Instructions</a
         >
       </div>
@@ -52,33 +144,63 @@
 
     <div class="container mx-auto p-4 md:p-8 max-w-6xl">
       <header class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-900">AI Database Analyst</h1>
-        <p class="text-xl text-gray-600 mt-4">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900">
+          AI Database Analyst
+        </h1>
+        <p class="text-lg sm:text-xl text-gray-600 mt-4">
           Ask questions about your session data in plain English.
         </p>
       </header>
       <main>
         <!-- Query Input Section -->
-        <div class="bg-white p-6 rounded-xl shadow-md mb-8">
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-md mb-8">
           <form id="query-form">
             <label
               for="query-input"
-              class="block text-sm font-medium text-gray-700 mb-2"
+              class="block text-sm font-medium text-gray-700 mb-3"
               >Your Question:</label
             >
             <div class="flex flex-col sm:flex-row gap-4">
               <input
                 type="text"
                 id="query-input"
-                class="flex-grow w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                class="query-input flex-grow w-full px-4 py-3 rounded-lg focus:outline-none text-sm sm:text-base placeholder-gray-400"
                 placeholder="e.g., 'Who is the most consistent instructor in Q2 2025?'"
               />
               <button
                 type="submit"
                 id="submit-btn"
-                class="bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out"
+                class="ask-ai-btn text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                title="Send query"
               >
-                Ask AI
+                <svg
+                  id="arrow-icon"
+                  class="arrow-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  ></path>
+                </svg>
+                <svg
+                  id="spinner-icon"
+                  class="spinner-icon hidden"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                  ></path>
+                </svg>
               </button>
             </div>
           </form>

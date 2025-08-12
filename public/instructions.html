@@ -14,6 +14,70 @@
       body {
         font-family: "Inter", sans-serif;
       }
+
+      /* Responsive logo styles */
+      .logo-img {
+        height: auto;
+        max-height: 40px;
+        width: auto;
+        max-width: 120px;
+      }
+
+      @media (max-width: 640px) {
+        .logo-img {
+          max-width: 80px;
+          max-height: 30px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .logo-img {
+          max-width: 60px;
+          max-height: 25px;
+        }
+      }
+
+      /* Custom scrollbar styling for better visibility */
+      .scrollable-list {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e0 #f7fafc;
+      }
+
+      .scrollable-list::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .scrollable-list::-webkit-scrollbar-track {
+        background: #f7fafc;
+        border-radius: 4px;
+      }
+
+      .scrollable-list::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .scrollable-list::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+      }
+
+      /* Fade effect at bottom to indicate more content */
+      .list-container {
+        position: relative;
+      }
+
+      .list-container::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 20px;
+        background: linear-gradient(transparent, #f9fafb);
+        pointer-events: none;
+        border-radius: 0 0 0.5rem 0.5rem;
+      }
     </style>
   </head>
   <body class="bg-gray-50 text-gray-800">
@@ -23,58 +87,75 @@
         class="container mx-auto max-w-6xl px-4 py-3 flex justify-between items-center"
       >
         <div class="flex items-center">
-          <img src="logo.png" alt="Logo" width="120px" />
+          <img src="logo.png" alt="Logo" class="logo-img" />
         </div>
         <a
           href="/"
-          class="text-blue-600 font-semibold hover:text-blue-800 transition"
+          class="text-blue-600 font-semibold hover:text-blue-800 transition text-sm sm:text-base"
           >&larr; Back to Analyst</a
         >
       </div>
     </header>
 
     <div class="container mx-auto p-4 md:p-8 max-w-5xl">
-      <main class="bg-white p-8 rounded-xl shadow-md">
-        <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-4">
+      <main class="bg-white p-4 sm:p-6 lg:p-8 rounded-xl shadow-md">
+        <h2
+          class="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 border-b pb-4"
+        >
           How to Write Good Prompts
         </h2>
 
-        <p class="mb-8 text-gray-600">
+        <p class="mb-8 text-gray-600 text-sm sm:text-base">
           To get the best results from the AI, it's helpful to know what data is
           available. You can use the following lists of instructors, domains,
           and classes to make your questions more specific.
         </p>
 
         <!-- Data Lists Section -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div
+          class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-10"
+        >
           <!-- Instructors Card -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-xl font-semibold mb-3 text-gray-800">
+          <div class="bg-gray-50 p-4 sm:p-6 rounded-lg list-container">
+            <h3 class="text-lg sm:text-xl font-semibold mb-3 text-gray-800">
               Instructors
             </h3>
+            <div class="text-xs text-gray-500 mb-2 flex items-center">
+              <span>📜 Scroll to see all</span>
+            </div>
             <ul
               id="instructors-list"
-              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+              class="scrollable-list list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto text-sm border border-gray-200 rounded p-3 bg-white"
             >
               <li>Loading...</li>
             </ul>
           </div>
           <!-- Domains Card -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-xl font-semibold mb-3 text-gray-800">Domains</h3>
+          <div class="bg-gray-50 p-4 sm:p-6 rounded-lg list-container">
+            <h3 class="text-lg sm:text-xl font-semibold mb-3 text-gray-800">
+              Domains
+            </h3>
+            <div class="text-xs text-gray-500 mb-2 flex items-center">
+              <span>📜 Scroll to see all</span>
+            </div>
             <ul
               id="domains-list"
-              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+              class="scrollable-list list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto text-sm border border-gray-200 rounded p-3 bg-white"
             >
               <li>Loading...</li>
             </ul>
           </div>
           <!-- Classes Card -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-xl font-semibold mb-3 text-gray-800">Classes</h3>
+          <div class="bg-gray-50 p-4 sm:p-6 rounded-lg list-container">
+            <h3 class="text-lg sm:text-xl font-semibold mb-3 text-gray-800">
+              Classes
+            </h3>
+            <div class="text-xs text-gray-500 mb-2 flex items-center">
+              <span>📜 Scroll to see all</span>
+            </div>
             <ul
               id="classes-list"
-              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+              class="scrollable-list list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto text-sm border border-gray-200 rounded p-3 bg-white"
             >
               <li>Loading...</li>
             </ul>
@@ -89,23 +170,27 @@
           <div class="space-y-4">
             <div class="bg-gray-100 p-4 rounded-lg">
               <p class="font-mono text-gray-800">
-                "What is the average rating for the 'Backend' domain?"
+                For 2025, show quarter-wise overall average rating, session
+                counts and sum of responses
               </p>
             </div>
             <div class="bg-gray-100 p-4 rounded-lg">
               <p class="font-mono text-gray-800">
-                "Who is the highest-rated instructor in Q2 2025 with at least 5
-                sessions?"
+                List each domain along with its weighted average rating
               </p>
             </div>
             <div class="bg-gray-100 p-4 rounded-lg">
               <p class="font-mono text-gray-800">
-                "Show the month-over-month rating trend for Q1 2025."
+                Identify the classes with the lowest average session rating in
+                Q2 2025 (April to June), considering only classes that have
+                conducted at least 5 sessions in this period, and include the
+                total number of sessions, sum of responses.
               </p>
             </div>
             <div class="bg-gray-100 p-4 rounded-lg">
               <p class="font-mono text-gray-800">
-                "List all sessions for 'John Doe' in January 2025."
+                Show all sessions held on 27 July, 2025 with instructor, class,
+                rating, responses
               </p>
             </div>
           </div>

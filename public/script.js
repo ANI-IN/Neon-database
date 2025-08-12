@@ -23,7 +23,14 @@ document.addEventListener("DOMContentLoaded", () => {
     resetUI();
     loader.style.display = "flex";
     submitBtn.disabled = true;
-    submitBtn.textContent = "Thinking...";
+
+    // Show spinner and hide arrow
+    const arrowIcon = document.getElementById("arrow-icon");
+    const spinnerIcon = document.getElementById("spinner-icon");
+    if (arrowIcon && spinnerIcon) {
+      arrowIcon.classList.add("hidden");
+      spinnerIcon.classList.remove("hidden");
+    }
 
     try {
       const response = await fetch("/api/query", {
@@ -47,7 +54,14 @@ document.addEventListener("DOMContentLoaded", () => {
       // Hide loader and re-enable button
       loader.style.display = "none";
       submitBtn.disabled = false;
-      submitBtn.textContent = "Ask AI";
+
+      // Show arrow and hide spinner
+      const arrowIcon = document.getElementById("arrow-icon");
+      const spinnerIcon = document.getElementById("spinner-icon");
+      if (arrowIcon && spinnerIcon) {
+        arrowIcon.classList.remove("hidden");
+        spinnerIcon.classList.add("hidden");
+      }
     }
   });
 
