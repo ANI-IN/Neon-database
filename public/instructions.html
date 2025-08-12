@@ -1,0 +1,118 @@
+<!-- public/instructions.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Instructions - AI Database Analyst</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-800">
+    <!-- Header -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+      <div
+        class="container mx-auto max-w-6xl px-4 py-3 flex justify-between items-center"
+      >
+        <div class="flex items-center">
+          <img src="logo.png" alt="Logo" width="120px" />
+        </div>
+        <a
+          href="/"
+          class="text-blue-600 font-semibold hover:text-blue-800 transition"
+          >&larr; Back to Analyst</a
+        >
+      </div>
+    </header>
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+      <main class="bg-white p-8 rounded-xl shadow-md">
+        <h2 class="text-3xl font-bold text-gray-900 mb-6 border-b pb-4">
+          How to Write Good Prompts
+        </h2>
+
+        <p class="mb-8 text-gray-600">
+          To get the best results from the AI, it's helpful to know what data is
+          available. You can use the following lists of instructors, domains,
+          and classes to make your questions more specific.
+        </p>
+
+        <!-- Data Lists Section -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+          <!-- Instructors Card -->
+          <div class="bg-gray-50 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">
+              Instructors
+            </h3>
+            <ul
+              id="instructors-list"
+              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+            >
+              <li>Loading...</li>
+            </ul>
+          </div>
+          <!-- Domains Card -->
+          <div class="bg-gray-50 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Domains</h3>
+            <ul
+              id="domains-list"
+              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+            >
+              <li>Loading...</li>
+            </ul>
+          </div>
+          <!-- Classes Card -->
+          <div class="bg-gray-50 p-6 rounded-lg">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Classes</h3>
+            <ul
+              id="classes-list"
+              class="list-disc list-inside space-y-1 text-gray-700 h-48 overflow-y-auto"
+            >
+              <li>Loading...</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Example Prompts Section -->
+        <div>
+          <h3 class="text-2xl font-semibold mb-4 text-gray-800 border-b pb-3">
+            Example Prompts
+          </h3>
+          <div class="space-y-4">
+            <div class="bg-gray-100 p-4 rounded-lg">
+              <p class="font-mono text-gray-800">
+                "What is the average rating for the 'Backend' domain?"
+              </p>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+              <p class="font-mono text-gray-800">
+                "Who is the highest-rated instructor in Q2 2025 with at least 5
+                sessions?"
+              </p>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+              <p class="font-mono text-gray-800">
+                "Show the month-over-month rating trend for Q1 2025."
+              </p>
+            </div>
+            <div class="bg-gray-100 p-4 rounded-lg">
+              <p class="font-mono text-gray-800">
+                "List all sessions for 'John Doe' in January 2025."
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <script src="/instructions.js"></script>
+  </body>
+</html>

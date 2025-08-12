@@ -1,0 +1,26 @@
+# Dependencies
+# This folder can be recreated by running `npm install`
+/node_modules
+
+# Environment Variables
+# This file contains sensitive information like API keys and database URLs.
+# Never commit this file to a public repository!
+.env
+
+# Data Files
+# It's good practice to ignore data files, especially if they are large.
+/data/
+
+# Logs
+# Any log files created during development.
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# macOS specific
+.DS_Store
+
+# Editor-specific files
+.vscode/
