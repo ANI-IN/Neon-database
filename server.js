@@ -1,6 +1,7 @@
 // server.js - Complete Fixed Version
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 require("dotenv").config();
 
 const { getAiSql, getAiSummary } = require("./ai");
@@ -14,6 +15,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static("public"));
 
+app.use(express.static(path.join(__dirname, "public")));
 // Much simpler and more reliable SQL validation
 function isValidSqlQuery(sqlQuery) {
   if (!sqlQuery || typeof sqlQuery !== "string") {
