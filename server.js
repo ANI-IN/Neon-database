@@ -1,6 +1,4 @@
-// server.js
-// Main entry point for the backend server.
-
+// server.js - Complete Fixed Version
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -14,9 +12,43 @@ const PORT = process.env.PORT || 3001;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public")); // Serve the frontend
+app.use(express.static("public"));
 
-// Main endpoint to handle natural language queries
+// Much simpler and more reliable SQL validation
+function isValidSqlQuery(sqlQuery) {
+  if (!sqlQuery || typeof sqlQuery !== "string") {
+    console.log("[DEBUG] SQL validation failed: empty or non-string");
+    return false;
+  }
+
+  const trimmedSql = sqlQuery.trim();
+  console.log("[DEBUG] Validating SQL:", trimmedSql.substring(0, 100) + "...");
+
+  if (!trimmedSql) {
+    console.log("[DEBUG] SQL validation failed: empty after trim");
+    return false;
+  }
+
+  // More flexible validation - allow WITH (CTEs) and SELECT
+  const startsCorrectly = /^\s*(WITH|SELECT)\s+/i.test(trimmedSql);
+  console.log("[DEBUG] Starts with WITH/SELECT:", startsCorrectly);
+
+  if (!startsCorrectly) {
+    console.log(
+      "[DEBUG] SQL validation failed: doesn't start with WITH or SELECT"
+    );
+    return false;
+  }
+
+  // Basic check for SQL structure
+  const hasBasicStructure =
+    /\bFROM\s+/i.test(trimmedSql) || /\bSELECT\s+/i.test(trimmedSql);
+  console.log("[DEBUG] Has basic SQL structure:", hasBasicStructure);
+
+  return hasBasicStructure;
+}
+
+// Main endpoint
 app.post("/api/query", async (req, res) => {
   const { query: userQuery } = req.body;
 
@@ -27,48 +59,71 @@ app.post("/api/query", async (req, res) => {
   console.log(`[INFO] Received query: "${userQuery}"`);
 
   try {
-    // Step 1: Get SQL from the AI based on the user query and schema
+    // Step 1: Generate SQL
     console.log("[INFO] Generating SQL...");
     const sqlQuery = await getAiSql(userQuery);
     console.log(`[INFO] Generated SQL: ${sqlQuery}`);
 
-    if (!sqlQuery || !sqlQuery.toUpperCase().startsWith("SELECT")) {
-      console.error("[ERROR] Failed to generate valid SQL.");
+    // Step 2: Validate SQL
+    if (!isValidSqlQuery(sqlQuery)) {
+      console.error("[ERROR] SQL validation failed");
+      console.error(`[ERROR] Full SQL: ${sqlQuery}`);
       return res.status(500).json({
-        error:
-          "Failed to generate a valid SQL query. The AI may have returned an invalid response.",
+        error: "Generated SQL query is invalid",
+        details: `SQL: ${sqlQuery}`,
+        suggestion: "Try rephrasing your question",
       });
     }
 
-    // Step 2: Execute the SQL query against the database
-    console.log("[INFO] Executing SQL on Neon DB...");
-    const { rows: data } = await executeQuery(sqlQuery);
-    console.log(`[INFO] Fetched ${data.length} rows from DB.`);
+    console.log("[INFO] SQL validation passed");
 
-    // Step 3: Get a natural language summary of the results from the AI
+    // Step 3: Execute SQL
+    console.log("[INFO] Executing SQL on database...");
+    const { rows: data } = await executeQuery(sqlQuery);
+    console.log(
+      `[INFO] Query executed successfully. Fetched ${data.length} rows.`
+    );
+
+    // Step 4: Generate summary
     console.log("[INFO] Generating summary...");
     const summary = await getAiSummary(userQuery, sqlQuery, data);
-    console.log(`[INFO] Generated Summary: ${summary}`);
+    console.log(`[INFO] Summary generated: ${summary.substring(0, 100)}...`);
 
-    // Step 4: Return the structured response
+    // Step 5: Return response
     res.json({
       data,
       summary,
       sql: sqlQuery,
     });
   } catch (error) {
-    console.error(
-      "[ERROR] An error occurred in the /api/query endpoint:",
-      error
-    );
-    res.status(500).json({
-      error: "An internal server error occurred.",
-      details: error.message,
-    });
+    console.error("[ERROR] Error in /api/query:", error);
+
+    if (
+      error.message.includes("Service unavailable") ||
+      error.message.includes("503")
+    ) {
+      res.status(503).json({
+        error: "AI service temporarily unavailable",
+        details: "GROQ API is down. Try again in a few minutes.",
+        suggestion: "Check https://groqstatus.com/ for status",
+      });
+    } else if (error.message.includes("Database execution error")) {
+      res.status(500).json({
+        error: "Database query failed",
+        details: error.message,
+        suggestion: "The SQL might have syntax errors",
+      });
+    } else {
+      res.status(500).json({
+        error: "Internal server error",
+        details: error.message,
+        suggestion: "Please try again",
+      });
+    }
   }
 });
 
-// New endpoints for instructions page
+// Other endpoints remain the same
 app.get("/api/instructors", async (req, res) => {
   try {
     console.log("[INFO] Fetching instructors list...");

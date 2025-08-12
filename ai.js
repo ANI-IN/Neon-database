@@ -1,6 +1,4 @@
-// ai.js
-// Handles all interactions with the GROQ API.
-
+// ai.js - Fixed version
 const Groq = require("groq-sdk");
 require("dotenv").config();
 
@@ -8,124 +6,215 @@ const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY,
 });
 
-// This is the master prompt that defines the AI's role, schema, and rules.
 const getSystemPromptForSql = () => `
-You are an expert PostgreSQL query writer. Your task is to convert a user's natural language question into a valid PostgreSQL query.
+You are an expert PostgreSQL query writer. Convert user's natural language questions into valid PostgreSQL queries.
 
-You will query a view named \`v_sessions\`.
+Query the view: v_sessions
 
-**Schema for v_sessions:**
-- session_id (BIGSERIAL, PK): Unique ID for the session.
-- topic_code (TEXT): The specific code for the topic.
-- type (TEXT): The type of session (e.g., 'Live Class', 'Test Review Session').
-- domain (TEXT): The subject domain (e.g., 'Backend', 'Data Science').
-- class (TEXT): The name of the class.
-- instructor (TEXT): The full name of the instructor.
-- session_date (TIMESTAMPTZ): The session date and time, stored in UTC.
-- pst_date (DATE): The session date in 'America/Los_Angeles' (PST/PDT) timezone.
-- pst_year (INT): The year in PST.
-- pst_quarter (INT): The quarter in PST (1-4).
-- pst_month (INT): The month in PST (1-12).
-- average (NUMERIC): The average rating for the session (1-5).
-- responses (INT): The number of ratings received.
-- students_attended (INT): The number of students who attended.
-- rated_pct (NUMERIC): The percentage of attendees who left a rating (responses / students_attended).
+Schema:
+- session_id (BIGSERIAL, PK)
+- topic_code (TEXT)
+- type (TEXT): session type like 'Live Class', 'Test Review Session'
+- domain (TEXT): subject domain like 'Backend', 'Data Science' 
+- class (TEXT): class name
+- instructor (TEXT): instructor full name
+- session_date (TIMESTAMPTZ): session datetime in UTC
+- pst_date (DATE): session date in America/Los_Angeles timezone
+- pst_year (INT): year in PST
+- pst_quarter (INT): quarter 1-4 in PST
+- pst_month (INT): month 1-12 in PST
+- average (NUMERIC): average rating 1-5
+- responses (INT): number of ratings
+- students_attended (INT): number of students attended
+- rated_pct (NUMERIC): percentage who rated
 
-**Important Rules:**
-1.  **Timezone is Key:** ALL date and time filtering MUST be done using the \`pst_date\`, \`pst_year\`, \`pst_quarter\`, and \`pst_month\` columns. The user will always ask for dates in PST. For example, "Q1 2025" means \`WHERE pst_year = 2025 AND pst_quarter = 1\`. "January 2025" means \`WHERE pst_year = 2025 AND pst_month = 1\`.
-2.  **Rounding:** ALL aggregate calculations on the \`average\` column (like AVG, STDDEV, or weighted averages) MUST be rounded to two decimal places using \`ROUND(..., 2)\`.
-3.  **Weighted Average:** When asked for a "weighted average rating", you MUST use the formula: \`ROUND((SUM(average * responses) / SUM(responses))::numeric, 2)\`. Ensure you handle potential division by zero.
-4.  **Simple Average:** When asked for a "simple average" or just "average rating", use \`ROUND(AVG(average), 2)\`.
-5.  **Synonyms:** Treat 'class', 'topic', and 'session name' as synonyms that all refer to the \`class\` column.
-6.  **Thresholds:** If the user mentions a minimum number of sessions (e.g., "min 3 sessions"), use a \`HAVING COUNT(*) >= 3\` clause after grouping. If a threshold is implied by context (e.g., "highest-rated instructor"), a reasonable minimum like 3 sessions is appropriate.
-7.  **Consistency:** "Most consistent" instructor means the one with the lowest standard deviation of ratings. Calculate this using \`ROUND(STDDEV(average), 2)\`.
-8.  **Response Count:** When asked for the 'number of sessions with responses', you MUST use \`COUNT(*) FILTER (WHERE responses > 0)\`. For the total 'number of sessions', use \`COUNT(*)\`.
-9.  **Trend Analysis:** For questions about "month-over-month trend" or "increasing/decreasing ratings over time", you MUST generate a query that simply shows the data for comparison. Use a Common Table Expression (CTE) with the LAG() window function. The final query MUST be a simple \`SELECT ... FROM cte\` without any \`WHERE\` clause. For example: \`WITH monthly_avg AS (SELECT pst_month, ROUND(AVG(average), 2) AS current_avg FROM v_sessions WHERE pst_year = 2025 AND pst_quarter = 1 GROUP BY pst_month) SELECT pst_month, current_avg, LAG(current_avg, 1) OVER (ORDER BY pst_month) AS previous_avg FROM monthly_avg ORDER BY pst_month;\`
-10. **Output Format:** ONLY output the raw SQL query. Do not include any explanations, comments, or markdown formatting like \`\`\`sql. Just the query itself.
+RULES:
+1. Use PST columns for date filtering: pst_year, pst_quarter, pst_month, pst_date
+2. Round all averages: ROUND(AVG(average), 2)
+3. For weighted average: ROUND((SUM(average * responses) / NULLIF(SUM(responses), 0))::numeric, 2)
+4. Handle trends with LAG() window function
+5. Use CASE statements for period comparisons
+6. For multi-domain: GROUP BY instructor HAVING COUNT(DISTINCT domain) > 1
+
+EXAMPLE PATTERNS:
+
+Month-over-month trend:
+WITH monthly_data AS (
+  SELECT pst_month, ROUND(AVG(average), 2) AS avg_rating
+  FROM v_sessions WHERE pst_year = 2025 AND pst_quarter = 1
+  GROUP BY pst_month
+)
+SELECT pst_month, avg_rating, 
+       LAG(avg_rating) OVER (ORDER BY pst_month) AS prev_month,
+       ROUND(avg_rating - LAG(avg_rating) OVER (ORDER BY pst_month), 2) AS change
+FROM monthly_data ORDER BY pst_month;
+
+Period comparison (Jan vs Feb):
+WITH comparison AS (
+  SELECT class,
+    ROUND(AVG(CASE WHEN pst_month = 1 THEN average END), 2) AS jan_avg,
+    ROUND(AVG(CASE WHEN pst_month = 2 THEN average END), 2) AS feb_avg
+  FROM v_sessions 
+  WHERE pst_year = 2025 AND pst_month IN (1, 2)
+  GROUP BY class
+  HAVING COUNT(CASE WHEN pst_month = 1 THEN 1 END) > 0 
+     AND COUNT(CASE WHEN pst_month = 2 THEN 1 END) > 0
+)
+SELECT class, jan_avg, feb_avg, ROUND(feb_avg - jan_avg, 2) AS improvement
+FROM comparison WHERE feb_avg > jan_avg ORDER BY improvement DESC;
+
+Highest/Lowest in same query:
+WITH ratings AS (
+  SELECT class, instructor, ROUND(AVG(average), 2) AS avg_rating, COUNT(*) AS sessions
+  FROM v_sessions WHERE pst_year = 2025 AND pst_quarter = 2
+  GROUP BY class, instructor HAVING COUNT(*) >= 5
+)
+SELECT 
+  CASE 
+    WHEN avg_rating = (SELECT MAX(avg_rating) FROM ratings) THEN 'Highest'
+    WHEN avg_rating = (SELECT MIN(avg_rating) FROM ratings) THEN 'Lowest'
+  END AS type,
+  class, instructor, avg_rating, sessions
+FROM ratings 
+WHERE avg_rating = (SELECT MAX(avg_rating) FROM ratings) 
+   OR avg_rating = (SELECT MIN(avg_rating) FROM ratings)
+ORDER BY avg_rating DESC;
+
+Multi-domain instructors:
+SELECT instructor, domain, ROUND(AVG(average), 2) AS avg_rating, SUM(responses) AS responses
+FROM v_sessions WHERE pst_year = 2025
+GROUP BY instructor, domain
+HAVING instructor IN (
+  SELECT instructor FROM v_sessions WHERE pst_year = 2025
+  GROUP BY instructor 
+  HAVING COUNT(DISTINCT domain) > 1 AND AVG(average) >= 4.4
+)
+ORDER BY instructor, domain;
+
+OUTPUT: Return ONLY the SQL query. No explanations, no markdown, no comments.
 `;
 
-/**
- * Generates an SQL query from a natural language user query.
- * @param {string} userQuery The user's question in English.
- * @returns {Promise<string>} The generated SQL query.
- */
-async function getAiSql(userQuery) {
-  try {
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content: getSystemPromptForSql(),
-        },
-        {
-          role: "user",
-          content: `User Question: "${userQuery}"\n\nSQL Query:`,
-        },
-      ],
-      model: "llama3-70b-8192",
-      temperature: 0,
-      max_tokens: 1024,
-    });
-    return chatCompletion.choices[0]?.message?.content?.trim() || "";
-  } catch (error) {
-    console.error("[ERROR] Error in getAiSql:", error);
-    throw new Error("Failed to generate SQL from GROQ API.");
+async function getAiSql(userQuery, maxRetries = 3) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `[DEBUG] AI attempt ${attempt}/${maxRetries} for query: "${userQuery}"`
+      );
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: getSystemPromptForSql(),
+          },
+          {
+            role: "user",
+            content: `Convert this to SQL: "${userQuery}"`,
+          },
+        ],
+        model: "llama3-70b-8192",
+        temperature: 0,
+        max_tokens: 1024,
+      });
+
+      const sqlQuery =
+        chatCompletion.choices[0]?.message?.content?.trim() || "";
+
+      if (!sqlQuery) {
+        throw new Error("Empty SQL response from AI");
+      }
+
+      // Clean up the response (remove any markdown if present)
+      let cleanSql = sqlQuery;
+      if (cleanSql.includes("```sql")) {
+        cleanSql = cleanSql
+          .replace(/```sql\n?/g, "")
+          .replace(/```\n?/g, "")
+          .trim();
+      }
+      if (cleanSql.includes("```")) {
+        cleanSql = cleanSql.replace(/```/g, "").trim();
+      }
+
+      console.log(
+        `[DEBUG] AI generated SQL (${
+          cleanSql.length
+        } chars): ${cleanSql.substring(0, 100)}...`
+      );
+      return cleanSql;
+    } catch (error) {
+      console.error(`[ERROR] AI attempt ${attempt} failed:`, error.message);
+
+      if (error.status === 503 && attempt < maxRetries) {
+        const delay = attempt * 2000;
+        console.log(`[INFO] Retrying in ${delay}ms...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      if (attempt === maxRetries) {
+        throw new Error(
+          `Failed to generate SQL after ${maxRetries} attempts: ${error.message}`
+        );
+      }
+    }
   }
 }
 
-/**
- * Generates a human-readable summary of the query results.
- * @param {string} userQuery The original user query.
- * @param {string} sqlQuery The executed SQL query.
- * @param {Array<Object>} data The data returned from the database.
- * @returns {Promise<string>} A natural language summary.
- */
-async function getAiSummary(userQuery, sqlQuery, data) {
+async function getAiSummary(userQuery, sqlQuery, data, maxRetries = 2) {
   if (!data || data.length === 0) {
-    return "The query ran successfully, but returned no results.";
+    return "Query executed successfully but returned no results.";
   }
-  try {
-    const summaryPrompt = `
-You are a helpful data analyst. Your job is to interpret the results of a database query and provide a concise, easy-to-understand summary.
 
-The user asked the following question:
-"${userQuery}"
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const summaryPrompt = `
+Question: "${userQuery}"
 
-To answer this, the following SQL query was executed:
-\`\`\`sql
-${sqlQuery}
-\`\`\`
+SQL: ${sqlQuery}
 
-The query returned the following data:
-\`\`\`json
-${JSON.stringify(data, null, 2)}
-\`\`\`
+Results (${data.length} rows):
+${JSON.stringify(data.slice(0, 5), null, 2)}${
+        data.length > 5 ? "\n... and more rows" : ""
+      }
 
-Based on all this information, please provide a one or two-sentence summary of the finding. Be direct and clear.
-`;
-    const chatCompletion = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are a helpful data analyst who summarizes query results in plain English.",
-        },
-        {
-          role: "user",
-          content: summaryPrompt,
-        },
-      ],
-      model: "llama3-8b-8192", // A smaller model is fine for summarization
-      temperature: 0.2,
-      max_tokens: 256,
-    });
-    return (
-      chatCompletion.choices[0]?.message?.content?.trim() ||
-      "Could not generate a summary."
-    );
-  } catch (error) {
-    console.error("[ERROR] Error in getAiSummary:", error);
-    throw new Error("Failed to generate summary from GROQ API.");
+Provide a clear 1-2 sentence summary of these results.`;
+
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a data analyst. Summarize query results clearly and concisely.",
+          },
+          {
+            role: "user",
+            content: summaryPrompt,
+          },
+        ],
+        model: "llama3-8b-8192",
+        temperature: 0.2,
+        max_tokens: 200,
+      });
+
+      return (
+        chatCompletion.choices[0]?.message?.content?.trim() ||
+        `Query found ${data.length} result(s). See the data table for details.`
+      );
+    } catch (error) {
+      console.error(
+        `[ERROR] Summary attempt ${attempt} failed:`,
+        error.message
+      );
+
+      if (attempt === maxRetries) {
+        return `Query executed successfully and returned ${data.length} result(s). Please review the data below.`;
+      }
+
+      if (error.status === 503 && attempt < maxRetries) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+    }
   }
 }
 
