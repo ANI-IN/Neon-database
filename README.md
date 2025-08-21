@@ -357,34 +357,7 @@ npm start
    - **Solution**: Wait and retry, check Groq API status
    - **Debug**: Verify `GROQ_API_KEY` is valid
 
-### Performance Optimization
 
-1. **Query Optimization**:
-
-   - Use specific date ranges
-   - Limit result sets with HAVING clauses
-   - Utilize indexed columns (pst_year, pst_quarter, pst_month)
-
-2. **Database Indexing**:
-
-   ```sql
-   CREATE INDEX idx_fact_session_time ON fact_session (pst_year, pst_quarter, pst_month);
-   CREATE INDEX idx_fact_session_instr ON fact_session (instructor_id);
-   ```
-
-3. **Connection Pooling**:
-   - Default pool size: 10 connections
-   - Automatic connection release
-   - SSL optimization for cloud databases
-
-### Monitoring and Logging
-
-The application includes comprehensive logging:
-
-- Request/response logging
-- SQL execution timing
-- AI API interaction logs
-- Error tracking with stack traces
 
 **Log Levels**:
 
